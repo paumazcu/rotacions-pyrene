@@ -1,1 +1,1 @@
-De moment res oer aqui
+De moment res per aqui

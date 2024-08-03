@@ -73,6 +73,9 @@ def get_groups():
               6: common_groups + ["Equitació iniciació"]}
     monitors_this_week = {}
 
+    ########################################
+    # DESCOMENTAR QUAN ES VULGUI LA VERSIÓ FINAL
+    ############################################
     # week_num = int(input("Introdueix el número de la setmana: "))
     #
     # for group_name in groups[week_num]:

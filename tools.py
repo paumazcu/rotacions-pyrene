@@ -1,7 +1,7 @@
 import restrictions
 import random
 import copy
-tasques = ["despertar", "esmorzar", "dinar", "temps lliure", "sopar", "nit"]
+tasques = ["despertar", "esmorzar", "dinar", "temps lliure", "sopar", "nit", "nit lliure"]
 days = ["diumenge", "dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte"]
 
 
@@ -48,9 +48,6 @@ def createHorari():
     for day in days[1:-1]:
         week[day]["sopar"] = (4, [])
     week["diumenge"]["sopar"] = (5, [])
-
-
-
 
     return week
 
@@ -125,6 +122,40 @@ def find_group_by_monitor(dictionary, monitor):
         if monitor in values:
             return key
     return None  # Return None if the value is not found
+
+def assign_free_nights(monis_dict):
+    """
+    Assigna aleatoriament una nit lliure a tots els monitors.
+    Nit lliure vol dir que no es fa sopar, nit, despertar ni esmorzar.
+    (Travessa no entra a l'equació)
+    :param monis_dict: diccionari de tots els monis separats per camps.
+    :return:
+
+    """
+    nits_lliures = {day: [] for day in days[1:-1]}
+    # monis_nit_fora = [x for v, x in monis_dict.items() if v in ["Wild Adv", "Big Bike", "Bike jr", "Equitació avançat"]]
+    # monis_nit_fora = [x for li in monis_nit_fora for x in li]
+
+    monis_sublists = [x for v, x in monis_dict.items() if v != "Travessa"]
+    monis_flat = [x for li in monis_sublists for x in li]
+
+    nits_lliures_completes = []
+    for m in monis_flat:
+        group = find_group_by_monitor(get_groups(), m)
+        for day in days[1:-1]:
+            if len(nits_lliures[day]) == 3:
+                nits_lliures_completes.append(day)
+            if group in restrictions.restriccions[f"{day}_nit fora"]:
+                nit_fora = day
+                break  # Només es fa màxim una nit fora
+            else:
+                nit_fora = None
+        nit_lliure = random.choice([dia for dia in days[1:-1] if dia != nit_fora and dia not in nits_lliures_completes])
+        nits_lliures[nit_lliure].append(m)
+
+    print(nits_lliures)
+
+assign_free_nights(get_groups())
 
 def assign_names_to_tasks():
 
@@ -201,15 +232,15 @@ def assign_names_to_tasks():
     return week, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
 
 
-prova, nits_counts, meals_counts, tl_counts, total_counts = assign_names_to_tasks()
-
-for d in prova.items():
-    print(d)
-
-print("\n NITS\n", nits_counts)
-print("\n MEALS\n", meals_counts)
-print("\n TL\n", tl_counts)
-print("\n TOTALS\n", total_counts)
+# prova, nits_counts, meals_counts, tl_counts, total_counts = assign_names_to_tasks()
+#
+# for d in prova.items():
+#     print(d)
+#
+# print("\n NITS\n", nits_counts)
+# print("\n MEALS\n", meals_counts)
+# print("\n TL\n", tl_counts)
+# print("\n TOTALS\n", total_counts)
 
 
 # todo

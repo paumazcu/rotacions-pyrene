@@ -1,6 +1,6 @@
 import restrictions
 import random
-
+import copy
 tasques = ["despertar", "esmorzar", "dinar", "temps lliure", "sopar", "nit"]
 days = ["diumenge", "dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte"]
 
@@ -129,19 +129,22 @@ def find_group_by_monitor(dictionary, monitor):
 def assign_names_to_tasks():
 
     monitors_this_week = get_groups()
-    monitors_list = sum(list(monitors_this_week.values()), [])
+    monitors_list = sum(list(monitors_this_week.values()), [])  # llista plana de tots els monitors
     meals_count_per_moni = {moni: 0 for moni in monitors_list}
     nits_desp_count_per_moni = {moni: 0 for moni in monitors_list}
     tl_count_per_moni = {moni: 0 for moni in monitors_list}
-    # porta el recompte de les tasques que te cada assignat cada monitor
+    # els anteriors diccionaris porten el recompte de les tasques que té assignades cada monitor.
 
     for day in week:
         for task in week[day]:
             monitors_ok = []
             monitors_not_ok = []
             limit = week[day][task][0]
+            # utilitzaré la següent variable per comprovar que un grup sencer no estigui al mateix àpat
+            monitors_copy = copy.deepcopy(monitors_this_week)
 
             while not len(monitors_ok) == limit:  # mentre no hi hagi el nombre suficient de monitors segueix buscant
+
                 monitors_available = [x for x in monitors_list if x not in monitors_not_ok and x not in monitors_ok]
 
                 if task in ["despertar", "nit"]:
@@ -163,8 +166,9 @@ def assign_names_to_tasks():
                                           if v == minval and k in monitors_available]
                     monitor_try = random.choice(monis_with_less_tl)
 
-                # descobreix de quin camp es el monitor que s'està provant
+                # descobreix de quin camp és el monitor que s'està provant
                 group_monitor_try = find_group_by_monitor(monitors_this_week, monitor_try)
+
                 if can_assign(group_monitor_try, monitor_try, day, task):  # comprova si incompleix alguna restricció
                     if task in ["despertar", "nit"]:
                         nits_desp_count_per_moni[monitor_try] += 1
@@ -175,6 +179,13 @@ def assign_names_to_tasks():
                         else:
                             meals_count_per_moni[monitor_try] += 1
                             monitors_ok.append(monitor_try)
+                            monitors_copy[group_monitor_try].remove(monitor_try)
+
+                            # Si només queda un monitor lliure d'un camp aquest idealment ha de quedar lliure
+                            if len(monitors_copy[group_monitor_try]) == 1:
+                                last_moni = monitors_copy[group_monitor_try][0]
+                                monitors_not_ok.append(last_moni)
+
                     elif task == "temps lliure":
                         tl_count_per_moni[monitor_try] += 1
                         monitors_ok.append(monitor_try)
@@ -202,7 +213,5 @@ print("\n TOTALS\n", total_counts)
 
 
 # todo
-
-# mirar que no hi hagi el grup sencer en els apats
 
 # intentar buscar una nit lliure per tothom

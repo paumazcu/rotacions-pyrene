@@ -1,6 +1,7 @@
 restriccions = {
     "diumenge_sopar": [],
     "diumenge_nit": ["Travessa"],
+    "diumenge_nit fora": [],
 
     "dilluns_despertar": ["Travessa"],
     "dilluns_esmorzar": ["Travessa"],
@@ -39,5 +40,6 @@ restriccions = {
     "divendres_nit fora": [],
 
     "dissabte_despertar": ["Travessa"],
-    "dissabte_esmorzar": ["Travessa"]
+    "dissabte_esmorzar": ["Travessa"],
+    "dissabte_nit fora": []
 }

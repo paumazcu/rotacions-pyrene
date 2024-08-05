@@ -1,6 +1,7 @@
 import restrictions
 import random
 import copy
+
 tasques = ["despertar", "esmorzar", "dinar", "temps lliure", "sopar", "nit", "nit lliure"]
 days = ["diumenge", "dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte"]
 
@@ -85,7 +86,7 @@ def get_groups():
     return monitors_this_week
 
 
-def can_assign(group, moni, day, task):
+def can_assign(group, moni, day, task, nits_lliures):
     """
     Comprova si pot assignar monitors d'un camp a una tasca
     :param group: nom del camp
@@ -104,6 +105,12 @@ def can_assign(group, moni, day, task):
             yesterday = days[i-1]
             break
 
+    # Restriccions de nit lliure
+    if moni in nits_lliures[day] and task in ["sopar", "nit"]:
+        return False
+    elif moni in nits_lliures[yesterday] and task in ["despertar", "esmorzar"]:
+        return False
+
     # Incompatibilitats de tasques
     if task == "esmorzar" and moni in week[day]["despertar"][1]:
         return False
@@ -111,6 +118,7 @@ def can_assign(group, moni, day, task):
         return False
     elif task == "despertar" and moni in week[yesterday]["nit"][1]:
         return False
+
     return True
 
 def find_group_by_monitor(dictionary, monitor):
@@ -129,12 +137,11 @@ def assign_free_nights(monis_dict):
     Nit lliure vol dir que no es fa sopar, nit, despertar ni esmorzar.
     (Travessa no entra a l'equació)
     :param monis_dict: diccionari de tots els monis separats per camps.
-    :return:
 
+    :return: diccionari amb les nits lliures que té cadascú
     """
-    nits_lliures = {day: [] for day in days[1:-1]}
-    # monis_nit_fora = [x for v, x in monis_dict.items() if v in ["Wild Adv", "Big Bike", "Bike jr", "Equitació avançat"]]
-    # monis_nit_fora = [x for li in monis_nit_fora for x in li]
+
+    nits_lliures = {day: [] for day in days}
 
     monis_sublists = [x for v, x in monis_dict.items() if v != "Travessa"]
     monis_flat = [x for li in monis_sublists for x in li]
@@ -142,7 +149,7 @@ def assign_free_nights(monis_dict):
     nits_lliures_completes = []
     for m in monis_flat:
         group = find_group_by_monitor(get_groups(), m)
-        for day in days[1:-1]:
+        for day in days:
             if len(nits_lliures[day]) == 3:
                 nits_lliures_completes.append(day)
             if group in restrictions.restriccions[f"{day}_nit fora"]:
@@ -150,24 +157,29 @@ def assign_free_nights(monis_dict):
                 break  # Només es fa màxim una nit fora
             else:
                 nit_fora = None
-        nit_lliure = random.choice([dia for dia in days[1:-1] if dia != nit_fora and dia not in nits_lliures_completes])
+        free_nights_available = [dia for dia in days[:-1] if dia != nit_fora and dia not in nits_lliures_completes]
+        nit_lliure = random.choice(free_nights_available)
         nits_lliures[nit_lliure].append(m)
 
-    print(nits_lliures)
+    return nits_lliures
 
-assign_free_nights(get_groups())
 
-def assign_names_to_tasks():
+def assign_names_to_tasks(random_seed):
 
+    random.seed(random_seed)
     monitors_this_week = get_groups()
     monitors_list = sum(list(monitors_this_week.values()), [])  # llista plana de tots els monitors
+    nits_lliures = assign_free_nights(monitors_this_week)
     meals_count_per_moni = {moni: 0 for moni in monitors_list}
     nits_desp_count_per_moni = {moni: 0 for moni in monitors_list}
     tl_count_per_moni = {moni: 0 for moni in monitors_list}
     # els anteriors diccionaris porten el recompte de les tasques que té assignades cada monitor.
 
     for day in week:
+        week[day]["nit lliure"] = [m for m in nits_lliures[day]]
         for task in week[day]:
+            if task == "nit lliure":
+                continue
             monitors_ok = []
             monitors_not_ok = []
             limit = week[day][task][0]
@@ -200,7 +212,7 @@ def assign_names_to_tasks():
                 # descobreix de quin camp és el monitor que s'està provant
                 group_monitor_try = find_group_by_monitor(monitors_this_week, monitor_try)
 
-                if can_assign(group_monitor_try, monitor_try, day, task):  # comprova si incompleix alguna restricció
+                if can_assign(group_monitor_try, monitor_try, day, task, nits_lliures):  # comprova si incompleix alguna restricció
                     if task in ["despertar", "nit"]:
                         nits_desp_count_per_moni[monitor_try] += 1
                         monitors_ok.append(monitor_try)
@@ -232,17 +244,27 @@ def assign_names_to_tasks():
     return week, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
 
 
-# prova, nits_counts, meals_counts, tl_counts, total_counts = assign_names_to_tasks()
-#
-# for d in prova.items():
-#     print(d)
-#
-# print("\n NITS\n", nits_counts)
-# print("\n MEALS\n", meals_counts)
-# print("\n TL\n", tl_counts)
-# print("\n TOTALS\n", total_counts)
+def run():
+    success = False
+    attempts = 0
+    max_attempts = 100
 
+    while not success and attempts < max_attempts:
+        attempts += 1
+        try:
+            random_seed = time.time() + attempts
+            prova, nits_counts, meals_counts, tl_counts, total_counts = tools.assign_names_to_tasks(random_seed)
+            success = True
+            for d in prova.items():
+                print(d)
 
-# todo
+            print("\n NITS\n", nits_counts)
+            print("\n MEALS\n", meals_counts)
+            print("\n TL\n", tl_counts)
+            print("\n TOTALS\n", total_counts)
 
-# intentar buscar una nit lliure per tothom
+        except (ValueError, IndexError) as e:
+            print(f"Attempt {attempts} failed: {e}. Trying again...")
+
+    if not success:
+        print("Failed to complete the algorithm after maximum attempts.")

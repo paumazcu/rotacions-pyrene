@@ -16,43 +16,42 @@ def createHorari():
 
     # cada tasca de cada dia de la setmana està associat a una parella (número, llista)
     # El número indica el nombre de gent necessària, i la llista els noms de la gent
-    week = {day: {tasca: (0, []) for tasca in tasques} for day in days}
+    empty_week = {day: {tasca: (0, []) for tasca in tasques} for day in days}
 
     # Actualitza els números
     # NIT
     for day in ["diumenge", "divendres"]:
-        week[day]["nit"] = (3, [])
+        empty_week[day]["nit"] = (3, [])
     for day in ["dilluns", "dimarts", "dimecres", "dijous"]:
-        week[day]["nit"] = (2, [])
+        empty_week[day]["nit"] = (2, [])
 
     # DESPERTAR
     for day in days[1:]:
-        week[day]["despertar"] = (2, [])
+        empty_week[day]["despertar"] = (2, [])
 
     # TEMPS LLIURE
     for day in ["dilluns", "dimarts", "dijous"]:
-        week[day]["temps lliure"] = (2, [])
+        empty_week[day]["temps lliure"] = (2, [])
 
     # ESMORZAR
     for day in ["dilluns", "dimarts", "dissabte"]:
-        week[day]["esmorzar"] = (4, [])
+        empty_week[day]["esmorzar"] = (4, [])
     for day in ["dijous", "divendres"]:
-        week[day]["esmorzar"] = (3, [])
-    week["dimecres"]["esmorzar"] = (2, [])
+        empty_week[day]["esmorzar"] = (3, [])
+    empty_week["dimecres"]["esmorzar"] = (2, [])
 
     # DINAR
     for day in ["dilluns", "dimarts"]:
-        week[day]["dinar"] = (3, [])
-    week["dijous"]["dinar"] = (4, [])
+        empty_week[day]["dinar"] = (3, [])
+    empty_week["dijous"]["dinar"] = (4, [])
 
     # SOPAR
     for day in days[1:-1]:
-        week[day]["sopar"] = (4, [])
-    week["diumenge"]["sopar"] = (5, [])
+        empty_week[day]["sopar"] = (4, [])
+    empty_week["diumenge"]["sopar"] = (5, [])
 
-    return week
+    return empty_week
 
-week = createHorari()
 
 def get_groups():
     """
@@ -164,9 +163,12 @@ def assign_free_nights(monis_dict):
     return nits_lliures
 
 
-def assign_names_to_tasks(random_seed):
+def assign_names_to_tasks():
 
-    random.seed(random_seed)
+    global week
+
+    week = createHorari()
+
     monitors_this_week = get_groups()
     monitors_list = sum(list(monitors_this_week.values()), [])  # llista plana de tots els monitors
     nits_lliures = assign_free_nights(monitors_this_week)
@@ -192,12 +194,16 @@ def assign_names_to_tasks(random_seed):
 
                 if task in ["despertar", "nit"]:
                     nd_count_per_moni_availables = {moni: nits_desp_count_per_moni[moni] for moni in monitors_available}
+                    if len(nd_count_per_moni_availables) == 0:
+                        raise Exception("Error: there aren't monis availables for nd.")
                     minval = min(nd_count_per_moni_availables.values())
                     monis_with_less_nd = [k for k, v in nits_desp_count_per_moni.items()
                                           if v == minval and k in monitors_available]
                     monitor_try = random.choice(monis_with_less_nd)
                 elif task in ["esmorzar", "dinar", "sopar"]:
                     meals_count_per_moni_availables = {moni: meals_count_per_moni[moni] for moni in monitors_available}
+                    if len(meals_count_per_moni_availables) == 0:
+                        raise Exception("Error: there aren't monis availables for meals.")
                     minval = min(meals_count_per_moni_availables.values())
                     monis_with_less_meals = [k for k, v in meals_count_per_moni.items()
                                              if v == minval and k in monitors_available]
@@ -238,8 +244,37 @@ def assign_names_to_tasks(random_seed):
             for moni in monitors_ok:
                 week[day][task][1].append(moni)
 
-    total_count_per_moni = {moni: nits_desp_count_per_moni[moni] +
-                            meals_count_per_moni[moni] + tl_count_per_moni[moni] for moni in monitors_list}
+    total_count_per_moni = {moni: nits_desp_count_per_moni[moni] + meals_count_per_moni[moni] +
+                                  tl_count_per_moni[moni] for moni in monitors_list}
+
+    total_count_no_travessa = {moni: nits_desp_count_per_moni[moni] + meals_count_per_moni[moni] +
+                                     tl_count_per_moni[moni] for moni in monitors_list
+                               if moni not in monitors_this_week["Travessa"]}
+
+    meals_nd_counts_no_travessa = {moni: nits_desp_count_per_moni[moni] + meals_count_per_moni[moni]
+                                   for moni in monitors_list if moni not in monitors_this_week["Travessa"]}
+
+    meals_counts_no_travessa = {moni: meals_count_per_moni[moni] for moni in monitors_list
+                                if moni not in monitors_this_week["Travessa"]}
+
+
+    max_count_tasks = max(total_count_no_travessa.values())
+    min_count_tasks = min(total_count_no_travessa.values())
+
+    max_count_meals_nd = max(meals_nd_counts_no_travessa.values())
+    min_count_meals_nd = min(meals_nd_counts_no_travessa.values())
+
+    max_count_meals = max(meals_counts_no_travessa.values())
+    min_count_meals = min(meals_counts_no_travessa.values())
+
+
+    if max_count_tasks - min_count_tasks > 2:
+        raise Exception("The distribution of tasks is too unbalanced")
+    elif max_count_meals_nd - min_count_meals_nd > 1:
+        raise Exception("The distribution of tasks is too unbalanced")
+    elif max_count_meals - min_count_meals > 1:
+        raise Exception("The distribution of tasks is too unbalanced")
+
 
     return week, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
 

@@ -1,5 +1,4 @@
 import tools
-import time
 
 
 def run():

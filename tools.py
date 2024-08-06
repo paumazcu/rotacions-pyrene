@@ -162,8 +162,54 @@ def assign_free_nights(monis_dict):
 
     return nits_lliures
 
+def check_is_balanced(nd, meals, tl, monitors_list, monitors_this_week):
+    """
+    Realitza les següents comprovacions:
+    # que el nombre total de tasques entre monitors no difereixi en més de 2.
+    # que el nombre de nits/despertar + àpats no difereixi en més d'1.
+    # que el nombre d'àpats no difereixi en més d'1.
+    No inclou els monitors de travessa en aquestes comprovacions
+    :param nd: dict nits/desp per moni sense travessa
+    :param meals: dict àpats per moni sense travessa
+    :param tl: dict temps lliures per moni sense travessa
+    :param monitors_list: llista de monitors
+    :param monitors_this_week: dict de monitors per camp
+    :return: True si compleix tots els requisits, altrament salta una excepció.
+    """
+
+    total_count_no_travessa = {moni: nd[moni] + meals[moni] + tl[moni] for moni in monitors_list
+                               if moni not in monitors_this_week["Travessa"]}
+
+    meals_nd_counts_no_travessa = {moni: nd[moni] + meals[moni] for moni in monitors_list
+                                   if moni not in monitors_this_week["Travessa"]}
+
+    meals_counts_no_travessa = {moni: meals[moni] for moni in monitors_list
+                                if moni not in monitors_this_week["Travessa"]}
+
+    max_count_tasks = max(total_count_no_travessa.values())
+    min_count_tasks = min(total_count_no_travessa.values())
+
+    max_count_meals_nd = max(meals_nd_counts_no_travessa.values())
+    min_count_meals_nd = min(meals_nd_counts_no_travessa.values())
+
+    max_count_meals = max(meals_counts_no_travessa.values())
+    min_count_meals = min(meals_counts_no_travessa.values())
+
+    if max_count_tasks - min_count_tasks > 2:
+        raise Exception("The distribution of tasks is too unbalanced")
+    elif max_count_meals_nd - min_count_meals_nd > 1:
+        raise Exception("The distribution of tasks is too unbalanced")
+    elif max_count_meals - min_count_meals > 1:
+        raise Exception("The distribution of tasks is too unbalanced")
+
+    return True
+
 
 def assign_names_to_tasks():
+    """
+    Assigna als monitors les tasques tenint en compte totes les restriccions i incompatibilitats
+    :return: l'horari de setmanal i el recompte de tasques per monitor.
+    """
 
     global week
 
@@ -247,34 +293,8 @@ def assign_names_to_tasks():
     total_count_per_moni = {moni: nits_desp_count_per_moni[moni] + meals_count_per_moni[moni] +
                                   tl_count_per_moni[moni] for moni in monitors_list}
 
-    total_count_no_travessa = {moni: nits_desp_count_per_moni[moni] + meals_count_per_moni[moni] +
-                                     tl_count_per_moni[moni] for moni in monitors_list
-                               if moni not in monitors_this_week["Travessa"]}
-
-    meals_nd_counts_no_travessa = {moni: nits_desp_count_per_moni[moni] + meals_count_per_moni[moni]
-                                   for moni in monitors_list if moni not in monitors_this_week["Travessa"]}
-
-    meals_counts_no_travessa = {moni: meals_count_per_moni[moni] for moni in monitors_list
-                                if moni not in monitors_this_week["Travessa"]}
-
-
-    max_count_tasks = max(total_count_no_travessa.values())
-    min_count_tasks = min(total_count_no_travessa.values())
-
-    max_count_meals_nd = max(meals_nd_counts_no_travessa.values())
-    min_count_meals_nd = min(meals_nd_counts_no_travessa.values())
-
-    max_count_meals = max(meals_counts_no_travessa.values())
-    min_count_meals = min(meals_counts_no_travessa.values())
-
-
-    if max_count_tasks - min_count_tasks > 2:
-        raise Exception("The distribution of tasks is too unbalanced")
-    elif max_count_meals_nd - min_count_meals_nd > 1:
-        raise Exception("The distribution of tasks is too unbalanced")
-    elif max_count_meals - min_count_meals > 1:
-        raise Exception("The distribution of tasks is too unbalanced")
-
+    check_is_balanced(nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni,
+                      monitors_list, monitors_this_week)
 
     return week, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
 

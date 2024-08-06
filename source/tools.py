@@ -52,39 +52,6 @@ def createHorari():
 
     return empty_week
 
-
-def get_groups():
-    """
-    Pregunta a l'usuari quin torn correspon i quins monitors hi ha a cada camp.
-
-    :return: (monitors_this_week): diccionari amb els noms dels monitors separats per camp
-    """
-
-    common_groups =["Av Cabirols", "Av Isards", "Bold Adv", "Wild Adv"]
-
-    groups = {1: common_groups + ["Bike jr", "Equitació avançat"],
-              2: common_groups + ["Equitació iniciació"],
-              3: common_groups + ["Equitació avançat"],
-              4: common_groups + ["Big Bike", "Travessa", "Equitació iniciació"],
-              5: common_groups + ["Bike jr", "Travessa", "Equitació avançat"],
-              6: common_groups + ["Equitació iniciació"]}
-    monitors_this_week = {}
-
-    ########################################
-    # DESCOMENTAR QUAN ES VULGUI LA VERSIÓ FINAL
-    ############################################
-    # week_num = int(input("Introdueix el número de la setmana: "))
-    #
-    # for group_name in groups[week_num]:
-    #     names = input(f"Introdueix els noms dels monitors de {group_name}: separats per comes: ").split(",")
-    #     monitors_this_week[group_name] = [name.strip() for name in names]
-
-    monitors_this_week = {"Av Cabirols": ["Eva", "Pau"], "Av Isards": ["Blanca", "Erola"],
-                          "Bold Adv": ["Laia", "Júlia", "Noa"], "Wild Adv": ["Vinyet", "Max", "Lara"],
-                          "Travessa": ["Guillem", "Èlia", "Mariona"], "Equitació avançat": ["Manel", "Irene"]}
-    return monitors_this_week
-
-
 def can_assign(group, moni, day, task, nits_lliures):
     """
     Comprova si pot assignar monitors d'un camp a una tasca
@@ -147,7 +114,7 @@ def assign_free_nights(monis_dict):
 
     nits_lliures_completes = []
     for m in monis_flat:
-        group = find_group_by_monitor(get_groups(), m)
+        group = find_group_by_monitor(monis_dict, m)
         for day in days:
             if len(nits_lliures[day]) == 3:
                 nits_lliures_completes.append(day)
@@ -177,14 +144,19 @@ def check_is_balanced(nd, meals, tl, monitors_list, monitors_this_week):
     :return: True si compleix tots els requisits, altrament salta una excepció.
     """
 
-    total_count_no_travessa = {moni: nd[moni] + meals[moni] + tl[moni] for moni in monitors_list
-                               if moni not in monitors_this_week["Travessa"]}
-
-    meals_nd_counts_no_travessa = {moni: nd[moni] + meals[moni] for moni in monitors_list
+    if "Travessa" in monitors_this_week:
+        total_count_no_travessa = {moni: nd[moni] + meals[moni] + tl[moni] for moni in monitors_list
                                    if moni not in monitors_this_week["Travessa"]}
 
-    meals_counts_no_travessa = {moni: meals[moni] for moni in monitors_list
-                                if moni not in monitors_this_week["Travessa"]}
+        meals_nd_counts_no_travessa = {moni: nd[moni] + meals[moni] for moni in monitors_list
+                                       if moni not in monitors_this_week["Travessa"]}
+
+        meals_counts_no_travessa = {moni: meals[moni] for moni in monitors_list
+                                    if moni not in monitors_this_week["Travessa"]}
+    else:
+        total_count_no_travessa = {moni: nd[moni] + meals[moni] + tl[moni] for moni in monitors_list}
+        meals_nd_counts_no_travessa = {moni: nd[moni] + meals[moni] for moni in monitors_list}
+        meals_counts_no_travessa = meals
 
     max_count_tasks = max(total_count_no_travessa.values())
     min_count_tasks = min(total_count_no_travessa.values())
@@ -205,7 +177,7 @@ def check_is_balanced(nd, meals, tl, monitors_list, monitors_this_week):
     return True
 
 
-def assign_names_to_tasks():
+def assign_names_to_tasks(monitors_this_week):
     """
     Assigna als monitors les tasques tenint en compte totes les restriccions i incompatibilitats
     :return: l'horari de setmanal i el recompte de tasques per monitor.
@@ -215,7 +187,6 @@ def assign_names_to_tasks():
 
     week = createHorari()
 
-    monitors_this_week = get_groups()
     monitors_list = sum(list(monitors_this_week.values()), [])  # llista plana de tots els monitors
     nits_lliures = assign_free_nights(monitors_this_week)
     meals_count_per_moni = {moni: 0 for moni in monitors_list}

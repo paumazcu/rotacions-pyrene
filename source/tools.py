@@ -1,3 +1,5 @@
+import pandas as pd
+
 import restrictions
 import random
 import copy
@@ -177,6 +179,22 @@ def check_is_balanced(nd, meals, tl, monitors_list, monitors_this_week):
     return True
 
 
+def convert_dict_to_formatted_df(dic, monis=True):
+
+    for day in dic:
+        for task in dic[day]:
+            if monis:
+                if task != "nit lliure":
+                    dic[day][task] = " <br> ".join(dic[day][task][1])
+                else:
+                    dic[day][task] = " <br> ".join(dic[day][task])
+            else: break
+
+    df = pd.DataFrame.from_dict(dic, orient="columns")
+
+    return df
+
+
 def assign_names_to_tasks(monitors_this_week):
     """
     Assigna als monitors les tasques tenint en compte totes les restriccions i incompatibilitats
@@ -267,14 +285,47 @@ def assign_names_to_tasks(monitors_this_week):
     check_is_balanced(nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni,
                       monitors_list, monitors_this_week)
 
-    # for day in week:
-    #     for task in week[day]:
-    #         if task != "temps lliure":
-    #             del week[day][task][0]
-    for day in week:
-        for task in week[day]:
-            if task != "nit lliure":
-                week[day][task] = week[day][task][1]
+    week_df = convert_dict_to_formatted_df(week)
 
-    return week, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
+    return week_df, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
+
+def createHorari_nens():
+
+    empty_week = {day: {meal: True for meal in ["esmorzar", "dinar", "sopar"]} for day in days}
+
+    for day in ["diumenge", "dimecres", "divendres", "dissabte"]:
+        empty_week[day]["dinar"] = ""
+    empty_week["diumenge"]["esmorzar"] = ""
+    empty_week["dissabte"]["sopar"] = ""
+
+    return empty_week
+
+
+def assign_groups_to_tasks(num_of_groups):
+
+    week_nens = createHorari_nens()
+
+    static_pool = [f"{key} {i+1}" for key, count in num_of_groups.items() for i in range(int(count))]
+    dynamic_pool = copy.deepcopy(static_pool)
+
+    for day in week_nens:
+        for meal, value in week_nens[day].items():
+            tries = 0
+            while value:
+                tries += 1
+                if len(dynamic_pool) == 0:
+                    dynamic_pool = copy.deepcopy(static_pool)
+                choice = random.choice(dynamic_pool)
+
+                if choice[:-2] not in restrictions.restriccions[f"{day}_{meal}"]:
+                    week_nens[day][meal] = choice
+                    dynamic_pool.remove(choice)
+                    break
+
+                if tries > 10:
+                    raise Exception("Max tries exceeded. Restarting and trying again...")
+
+    week_nens_df = convert_dict_to_formatted_df(week_nens, monis=False)
+
+    return week_nens_df
 

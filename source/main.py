@@ -1,5 +1,8 @@
 import tools
+import streamlit as st
+import pandas as pd
 
+st.title("Rotacions Pyrene")
 def get_groups():
     """
     Pregunta a l'usuari quin torn correspon i quins monitors hi ha a cada camp.
@@ -18,11 +21,12 @@ def get_groups():
 
     monitors_dict = {}
 
-    # week_num = int(input("Introdueix el número de la setmana: "))
-    #
-    # for group_name in groups[week_num]:
-    #     names = input(f"Introdueix els noms dels monitors de {group_name}: separats per comes: ").split(",")
-    #     monitors_dict[group_name] = [name.strip() for name in names]
+    # week_num = st.number_input("Introdueix el número de torn", value=None, min_value=1, max_value=6, step=1)
+    # if week_num:
+    #     st.write("Introdueix els noms dels monitors de cada camp separats per comes:")
+    #     for group_name in groups[week_num]:
+    #         names = st.text_input(f"{group_name}:").split(",")
+    #         monitors_dict[group_name] = [name.strip() for name in names]
 
     monitors_dict = {"Av Cabirols": ["Eva", "Pau"], "Av Isards": ["Blanca", "Erola"],
                           "Bold Adv": ["Laia", "Júlia", "Noa"], "Wild Adv": ["Vinyet", "Max", "Lara"],

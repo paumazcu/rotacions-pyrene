@@ -16,39 +16,39 @@ def createHorari():
 
     # cada tasca de cada dia de la setmana està associat a una parella (número, llista)
     # El número indica el nombre de gent necessària, i la llista els noms de la gent
-    empty_week = {day: {tasca: (0, []) for tasca in tasques} for day in days}
+    empty_week = {day: {tasca: [0, []] for tasca in tasques} for day in days}
 
     # Actualitza els números
     # NIT
     for day in ["diumenge", "divendres"]:
-        empty_week[day]["nit"] = (3, [])
+        empty_week[day]["nit"] = [3, []]
     for day in ["dilluns", "dimarts", "dimecres", "dijous"]:
-        empty_week[day]["nit"] = (2, [])
+        empty_week[day]["nit"] = [2, []]
 
     # DESPERTAR
     for day in days[1:]:
-        empty_week[day]["despertar"] = (2, [])
+        empty_week[day]["despertar"] = [2, []]
 
     # TEMPS LLIURE
     for day in ["dilluns", "dimarts", "dijous"]:
-        empty_week[day]["temps lliure"] = (2, [])
+        empty_week[day]["temps lliure"] = [2, []]
 
     # ESMORZAR
     for day in ["dilluns", "dimarts", "dissabte"]:
-        empty_week[day]["esmorzar"] = (4, [])
+        empty_week[day]["esmorzar"] = [4, []]
     for day in ["dijous", "divendres"]:
-        empty_week[day]["esmorzar"] = (3, [])
-    empty_week["dimecres"]["esmorzar"] = (2, [])
+        empty_week[day]["esmorzar"] = [3, []]
+    empty_week["dimecres"]["esmorzar"] = [2, []]
 
     # DINAR
     for day in ["dilluns", "dimarts"]:
-        empty_week[day]["dinar"] = (3, [])
-    empty_week["dijous"]["dinar"] = (4, [])
+        empty_week[day]["dinar"] = [3, []]
+    empty_week["dijous"]["dinar"] = [4, []]
 
     # SOPAR
     for day in days[1:-1]:
-        empty_week[day]["sopar"] = (4, [])
-    empty_week["diumenge"]["sopar"] = (5, [])
+        empty_week[day]["sopar"] = [4, []]
+    empty_week["diumenge"]["sopar"] = [5, []]
 
     return empty_week
 
@@ -266,6 +266,15 @@ def assign_names_to_tasks(monitors_this_week):
 
     check_is_balanced(nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni,
                       monitors_list, monitors_this_week)
+
+    # for day in week:
+    #     for task in week[day]:
+    #         if task != "temps lliure":
+    #             del week[day][task][0]
+    for day in week:
+        for task in week[day]:
+            if task != "nit lliure":
+                week[day][task] = week[day][task][1]
 
     return week, nits_desp_count_per_moni, meals_count_per_moni, tl_count_per_moni, total_count_per_moni
 

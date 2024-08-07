@@ -1,8 +1,15 @@
 import pandas as pd
-
 import restrictions
+import streamlit as st
 import random
 import copy
+from openpyxl import Workbook
+from openpyxl.styles import Alignment
+from openpyxl.utils.dataframe import dataframe_to_rows
+from io import BytesIO
+import xlsxwriter
+import os
+
 
 tasques = ["despertar", "esmorzar", "dinar", "temps lliure", "sopar", "nit", "nit lliure"]
 days = ["diumenge", "dilluns", "dimarts", "dimecres", "dijous", "divendres", "dissabte"]
@@ -194,7 +201,7 @@ def convert_dict_to_formatted_df(dic, monis=True):
 
     return df
 
-
+@st.cache_data
 def assign_names_to_tasks(monitors_this_week):
     """
     Assigna als monitors les tasques tenint en compte totes les restriccions i incompatibilitats
@@ -328,4 +335,22 @@ def assign_groups_to_tasks(num_of_groups):
     week_nens_df = convert_dict_to_formatted_df(week_nens, monis=False)
 
     return week_nens_df
+
+def convert_df(df, filename):
+    def replace_linebreak(cell):
+        return cell.replace(" <br> ", os.linesep)
+
+    df = df.map(replace_linebreak)
+
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Sheet1', engine_kwargs={"text_wrap": True})
+    writer.close()
+
+    st.download_button(
+        label="Descarregar taula (.xlsx)",
+        data=output.getvalue(),
+        file_name=f"{filename}.xlsx",
+        mime="application/vnd.ms-excel"
+    )
 

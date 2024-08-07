@@ -1,9 +1,7 @@
 import tools
 import streamlit as st
-import pandas as pd
 
 st.title("Rotacions Pyrene")
-
 
 def get_names():
     """
@@ -30,12 +28,13 @@ def get_names():
     #                       "Equitació avançat": ["Manel", "Irene"], "Travessa": ["Guillem", "Èlia", "Mariona"]}
 
     global week_num
+    # week_num = 2
     week_num = st.number_input("Introdueix el número de torn:", value=None, min_value=1, max_value=6, step=1)
     if week_num:
         st.subheader("Rotacions monis")
         st.write("Introdueix els noms dels monitors de cada camp separats per comes:")
         for group_name in groups[week_num]:
-            names = st.text_input(f"{group_name}:").split(",")
+            names = st.text_input(f"{group_name}").split(",")
             monitors_dict[group_name] = [name.strip() for name in names]
 
     return monitors_dict
@@ -69,8 +68,11 @@ def run():
         try:
             table_df, nits_counts, meals_counts, tl_counts, total_counts = tools.assign_names_to_tasks(monitors_this_week)
             success = True
-            # print(table_df)
             st.markdown(table_df.to_html(escape=False), unsafe_allow_html=True)
+            # print(table_df)
+            st.write("Si vols fer alguna modificació manual pots descarregar la taula en format .xlsx (Excel) al següent enllaç:")
+            tools.convert_df(table_df, "rotacions_monis")
+
 
             # print("\n NITS\n", nits_counts)
             # print("\n MEALS\n", meals_counts)
@@ -97,20 +99,22 @@ def run2():
 
     num_of_groups = get_groups()
 
-    success_2 = False
-    attempts_2 = 0
-    max_attempts_2 = 50
+    success = False
+    attempts = 0
+    max_attempts = 50
 
-    while not success_2 and attempts_2 < max_attempts_2:
+    while not success and attempts < max_attempts:
+        attempts += 1
         try:
             table_nens_df = tools.assign_groups_to_tasks(num_of_groups)
-            success_2 = True
+            st.markdown(table_nens_df.to_html(escape=False), unsafe_allow_html=True)
+            tools.convert_df(table_nens_df, "rotacions_nens")
+            success = True
         except Exception as e:
-            print(f"2nd algorithm. Attempt {attempts_2} failed: {e}. Trying again...")
+            print(f"2nd algorithm. Attempt {attempts} failed: {e}. Trying again...")
 
-    if not success_2:
+    if not success:
         print("Failed to complete the 2nd algorithm after maximum attempts for de 2nd algorithm.")
-    st.markdown(table_nens_df.to_html(escape=False), unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

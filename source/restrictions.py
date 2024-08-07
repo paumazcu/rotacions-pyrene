@@ -26,7 +26,7 @@ restriccions = {
     "dimecres_nit fora": ["Wild Adv", "Bike jr", "Big Bike"],
 
     "dijous_despertar": ["Travessa", "Wild Adv", "Bike jr", "Big Bike"],
-    "dijous_esmorzar": ["Wild Adv", "Bike jr", "Big Bike"],
+    "dijous_esmorzar": ["Travessa", "Wild Adv", "Bike jr", "Big Bike"],
     "dijous_dinar": ["Travessa", "Wild Adv"],
     "dijous_temps lliure": ["Travessa", "Wild Adv"],
     "dijous_sopar": ["Travessa"],

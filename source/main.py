@@ -1,7 +1,7 @@
 import tools
 import streamlit as st
+from streamlit_float import *
 
-st.title("Rotacions Pyrene")
 
 def get_names():
     """
@@ -58,9 +58,34 @@ def get_groups():
 
 
 def run():
+    st.title("Rotacions Pyrene")
+    with st.expander("DISCLAIMER", icon="ℹ️"):
+        st.markdown(
+            """
+            Aquesta aplicació genera unes rotacions aleatòries per les tasques dels monitors i dels nens seguint
+            les següents premises:
+            - Per equilibrar les tasques entre monitors, pot haver-hi diferència entre tots els monitors com a màxim:
+                * 1 Àpat
+                * 1 Àpat + Nit/Despertar
+                * 2 Tasques en total
+            - Tant monis com nens no poden parar taula (ni despertar/nit/temps lliure en el cas de monis) si són fora.
+            - Un mateix monitor no pot despertar i fer esmorzar el mateix dia.
+            - Un mateix monitor no pot fer dinar i temps lliure el mateix dia.
+            - Un mateix monitor no pot fer nit i despertar a la mateixa nit.
+            - Tots els monitors d'un grup no poden estar alhora fent un àpat.
+            - Els monitors de travessa (si n'hi ha) només fan 1 àpat com a màxim (diumenge sopar o dimecres sopar).
+            - Tots els monitors excepte de travessa tenen una nit lliure el qual vol dir que es garanteix que aquesta nit
+            no fan sopar, nit, despertar ni esmorzar.
+            
+            PD. És poc probable però podria sortir alguna incompatibilitat puntual igual que passa quan es fan les
+            rotacions manualment. Tot i així s'han fet les rotacions amb menys d'1 segon i no amb 1h com es feia abans😁  
+            PD2: Es recomana descarregar la taula en versió excel per si cal fer alguna modificació a mitja setmana. 
+            """)
+
+
     success = False
     attempts = 0
-    max_attempts = 500
+    max_attempts = 100
 
     monitors_this_week = get_names()
     while not success and attempts < max_attempts:
@@ -96,7 +121,6 @@ def run():
 
 
 def run2():
-
     num_of_groups = get_groups()
 
     success = False
@@ -108,10 +132,11 @@ def run2():
         try:
             table_nens_df = tools.assign_groups_to_tasks(num_of_groups)
             st.markdown(table_nens_df.to_html(escape=False), unsafe_allow_html=True)
+            st.write("Si vols fer alguna modificació manual pots descarregar la taula en format .xlsx (Excel) al següent enllaç:")
             tools.convert_df(table_nens_df, "rotacions_nens")
             success = True
         except Exception as e:
-            print(f"2nd algorithm. Attempt {attempts} failed: {e}. Trying again...")
+            print(f"2nd algorithm. Attempt {attempts} failed: {e}. Restarting and trying again...")
 
     if not success:
         print("Failed to complete the 2nd algorithm after maximum attempts for de 2nd algorithm.")

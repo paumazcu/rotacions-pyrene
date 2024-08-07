@@ -330,7 +330,7 @@ def assign_groups_to_tasks(num_of_groups):
                     break
 
                 if tries > 10:
-                    raise Exception("Max tries exceeded. Restarting and trying again...")
+                    raise Exception("Max tries exceeded")
 
     week_nens_df = convert_dict_to_formatted_df(week_nens, monis=False)
 

@@ -1,6 +1,5 @@
 import tools
 import streamlit as st
-from streamlit_float import *
 
 
 def get_names():

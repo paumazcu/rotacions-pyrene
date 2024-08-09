@@ -1,3 +1,5 @@
+## Rotacions Pyrene App
+
 This is a simple Streamlit app (in catalan) for automating the rotations needed in Pyrene Summer Camp. The app can be found at the link [rotacions-pyrene.streamlit.app](https://rotacions-pyrene.streamlit.app/).
 
 The app consists in a simple form with 2 parts:
